@@ -1,40 +1,30 @@
-package Interface;
+package IO;
 
-interface BankAccounts {
-    void deposit(double amount);
-    void withdraw(double amount);
-}
+public class BankAccount {
 
-class CheckingAccount implements BankAccounts {
-    private double balance;
 
-    public CheckingAccount(double initialBalance) {
+    private int balance;
+
+    public BankAccount(int initialBalance) {
         balance = initialBalance;
     }
 
-    public void deposit(double amount) {
+    public synchronized void deposit(int amount) {
         balance += amount;
+        System.out.println("Deposited " + amount + ", new balance is " + balance);
+        notify(); // notify waiting thread
     }
 
-    public void withdraw(double amount) {
+    public synchronized void withdraw(int amount) {
+        while (balance < amount) {
+            System.out.println("Balance is insufficient for withdrawal, waiting for deposit...");
+            try {
+                wait(); // release lock and wait for notification
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
         balance -= amount;
-    }
-
-    public double getBalance() {
-        return balance;
+        System.out.println("Withdrawn " + amount + ", new balance is " + balance);
     }
 }
-
-class BankAccount {
-    public static void main(String[] args) {
-        CheckingAccount account = new CheckingAccount(1000.0);
-        System.out.println("Initial balance: " + account.getBalance());
-
-        account.deposit(500.0);
-        System.out.println("Balance after deposit: " + account.getBalance());
-
-        account.withdraw(200.0);
-        System.out.println("Balance after withdrawal: " + account.getBalance());
-    }
-}
-
